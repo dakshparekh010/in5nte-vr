@@ -412,7 +412,7 @@ export default function HeroCanvas() {
                         {/* Buttons — only show on certain chapters */}
                         {activeChapter.showButtons && (
                           <div className="flex gap-4 flex-wrap justify-center pointer-events-auto">
-                            <button 
+                            <button
                               onClick={() => window.dispatchEvent(new CustomEvent('open-booking'))}
                               className="font-heading bg-gradient-to-r from-[var(--color-brand-cyan)] to-[var(--color-brand-purple)] text-white px-8 py-4 
                                 uppercase tracking-widest font-bold shadow-[0_0_15px_rgba(139,0,255,0.4)] 
@@ -420,7 +420,7 @@ export default function HeroCanvas() {
                                 transform hover:-translate-y-1 rounded-sm">
                               Enter The Game
                             </button>
-                            <button 
+                            <button
                               onClick={() => document.getElementById('why-us')?.scrollIntoView({ behavior: 'smooth' })}
                               className="font-heading border border-white/40 text-white/90 px-8 py-4 
                                 uppercase tracking-widest hover:border-[var(--color-brand-cyan)] hover:text-[var(--color-brand-cyan)] 
@@ -439,11 +439,10 @@ export default function HeroCanvas() {
                     {HERO_CHAPTERS.map((ch, i) => (
                       <motion.div
                         key={i}
-                        className={`rounded-full transition-all duration-500 ${
-                          i === chapterIndex
-                            ? 'bg-[var(--color-brand-cyan)] shadow-[0_0_12px_rgba(0,245,255,0.6)]'
-                            : 'bg-white/20'
-                        }`}
+                        className={`rounded-full transition-all duration-500 ${i === chapterIndex
+                          ? 'bg-[var(--color-brand-cyan)] shadow-[0_0_12px_rgba(0,245,255,0.6)]'
+                          : 'bg-white/20'
+                          }`}
                         animate={{
                           height: i === chapterIndex ? 24 : 6,
                           width: i === chapterIndex ? 2 : 6,

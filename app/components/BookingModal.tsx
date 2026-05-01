@@ -94,7 +94,7 @@ Message: ${formData.message || 'N/A'}`;
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center md:p-6">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -110,21 +110,21 @@ Message: ${formData.message || 'N/A'}`;
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="relative w-full max-w-2xl bg-[#07070f] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.15)] overflow-hidden my-8"
+            className="relative w-full h-full md:w-auto md:h-auto md:max-w-2xl bg-[#07070f] border-t md:border border-white/10 rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.15)] overflow-hidden flex flex-col"
           >
             {/* Top accent line */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 z-50" />
 
             {/* Close button */}
             <button
               onClick={closeModal}
-              className="absolute top-5 right-5 text-white/50 hover:text-white transition-colors p-1"
+              className="absolute top-4 right-4 z-50 flex items-center justify-center w-[44px] h-[44px] bg-[#07070f]/80 backdrop-blur-sm rounded-full border border-white/10 text-white/50 hover:text-white transition-colors"
               aria-label="Close modal"
             >
               <X size={24} />
             </button>
 
-            <div className="p-8 sm:p-10">
+            <div className="overflow-y-auto max-h-screen md:max-h-[90vh] px-4 pt-16 pb-6 md:px-10 md:py-10 w-full h-full">
               <h2 className="font-orbitron font-bold text-2xl sm:text-3xl text-white mb-2">
                 BOOK YOUR <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">SESSION</span>
               </h2>
