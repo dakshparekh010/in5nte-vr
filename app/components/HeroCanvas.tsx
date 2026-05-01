@@ -1,18 +1,69 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
 const TOTAL_FRAMES = 240;
 const FRAME_PATH = '/frames/frame_'; // e.g. frame_0001.jpg
 const FPS = 30;
 
+// ✅ Hero chapters with scroll progress ranges and content
+const HERO_CHAPTERS = [
+  {
+    range: [0, 0.2],
+    badge: "INDIA'S FIRST FREE ROAM VR ARCADE",
+    headline1: "IN5NITE",
+    headline2: "VR",
+    tagline: "PLAY UNTIL YOU FALL!!",
+    body: "India's first Free Roam VR Multiplayer experience with Full Body Tracking. Step into another reality — right here in Surat.",
+    showButtons: true,
+  },
+  {
+    range: [0.2, 0.4],
+    badge: "FREE ROAM TECHNOLOGY",
+    headline1: "MOVE",
+    headline2: "FREELY",
+    tagline: "NO WIRES. NO LIMITS.",
+    body: "Walk, run, crouch, and interact. Our Free Roam tech gives you complete physical freedom inside the game.",
+    showButtons: false,
+  },
+  {
+    range: [0.4, 0.6],
+    badge: "FULL BODY TRACKING",
+    headline1: "YOUR BODY",
+    headline2: "IN THE GAME",
+    tagline: "INDIA'S FIRST. WORLD CLASS.",
+    body: "Every movement of your body is tracked in real time. You don't press buttons — you ARE the controller.",
+    showButtons: false,
+  },
+  {
+    range: [0.6, 0.8],
+    badge: "MULTIPLAYER VR",
+    headline1: "PLAY",
+    headline2: "TOGETHER",
+    tagline: "SHARED VIRTUAL WORLDS.",
+    body: "Squad up with friends in the same virtual space. Battle, explore, and experience together like never before.",
+    showButtons: false,
+  },
+  {
+    range: [0.8, 1.0],
+    badge: "SURAT, GUJARAT",
+    headline1: "READY TO",
+    headline2: "ENTER?",
+    tagline: "YOUR REALITY ENDS HERE.",
+    body: "Visit us at Canal Walk Shoppers, Vesu, Surat. Walk in or book your session today.",
+    showButtons: true,
+  },
+];
+
 export default function HeroCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
+  const heroContainerRef = useRef<HTMLDivElement>(null); // ✅ Track hero container for scroll calculations
 
   const [loadedCount, setLoadedCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0); // ✅ Track scroll progress 0.0 to 1.0
   const framesRef = useRef<HTMLImageElement[]>([]);
   const currentFrameRef = useRef<number>(0);
 
@@ -103,32 +154,30 @@ export default function HeroCanvas() {
 
     let isPlaying = false;
 
-    // ✅ STEP 1: Define drawFrame FIRST — before anything else
+    // ✅ STEP 1: Define drawFrame FIRST — use cover mode for full-width display
     const drawFrame = (index: number) => {
       if (!framesRef.current[index]) return;
 
       const img = framesRef.current[index];
-      const canvasRatio = canvas.width / canvas.height;
-      const imgRatio = img.width / img.height;
 
-      let drawWidth = canvas.width;
-      let drawHeight = canvas.height;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      if (imgRatio > canvasRatio) {
-        drawWidth = canvas.height * imgRatio;
-        offsetX = (canvas.width - drawWidth) / 2;
-      } else {
-        drawHeight = canvas.width / imgRatio;
-        offsetY = (canvas.height - drawHeight) / 2;
-      }
+      // Cover mode — like CSS background-size: cover
+      const scale = Math.max(
+        canvas.width / img.naturalWidth,
+        canvas.height / img.naturalHeight
+      );
+      const x = (canvas.width - img.naturalWidth * scale) / 2;
+      const y = (canvas.height - img.naturalHeight * scale) / 2;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      ctx.drawImage(
+        img,
+        x, y,
+        img.naturalWidth * scale,
+        img.naturalHeight * scale
+      );
     };
 
-    // ✅ STEP 2: Define setCanvasSize AFTER drawFrame
+    // ✅ STEP 2: Define setCanvasSize AFTER drawFrame — set to full window size
     const setCanvasSize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -155,17 +204,41 @@ export default function HeroCanvas() {
     };
 
     const handleScroll = () => {
-      if (!isLoaded) return;
-      const heroHeight = window.innerHeight * 3; // scrolling distance
+      if (!isLoaded || !heroContainerRef.current) return;
 
-      const scrollFraction = window.scrollY / heroHeight;
-      const index = Math.min(
-        Math.max(0, Math.floor(scrollFraction * TOTAL_FRAMES)),
-        TOTAL_FRAMES - 1
-      );
+      const container = heroContainerRef.current;
+      const containerTop = container.offsetTop;
+      const containerHeight = container.offsetHeight; // e.g. 500vh
+      const stickyHeight = window.innerHeight;        // 100vh
+      const scrollTop = window.scrollY;
 
-      currentFrameRef.current = index;
-      requestAnimationFrame(() => drawFrame(index));
+      // ✅ How far user has scrolled INTO the hero container
+      const scrolledIntoContainer = scrollTop - containerTop;
+
+      // ✅ Total scrollable distance within hero (containerHeight - stickyHeight)
+      const maxScroll = containerHeight - stickyHeight;
+
+      // ✅ If user is ABOVE hero — show frame 0
+      if (scrolledIntoContainer < 0) {
+        drawFrame(0);
+        setScrollProgress(0);
+        return;
+      }
+
+      // ✅ If user is PAST hero — hold last frame, stop recalculating
+      if (scrolledIntoContainer >= maxScroll) {
+        const lastFrameIndex = Math.min(TOTAL_FRAMES - 1, Math.floor(1.0 * (TOTAL_FRAMES - 1)));
+        drawFrame(lastFrameIndex);
+        setScrollProgress(1);
+        return;
+      }
+
+      // ✅ Normal scrubbing within hero — clamp between 0 and 1
+      const fraction = Math.max(0, Math.min(scrolledIntoContainer / maxScroll, 1));
+      const frameIndex = Math.floor(fraction * (TOTAL_FRAMES - 1));
+      currentFrameRef.current = frameIndex;
+      drawFrame(frameIndex);
+      setScrollProgress(fraction);
     };
 
     // Preload only if not already preloaded (prevent duplicate loading on re-renders)
@@ -211,19 +284,40 @@ export default function HeroCanvas() {
   }, [isLoaded]);
 
   return (
-    <div className="relative h-[400vh]">
-      <div className="sticky top-0 w-full h-screen overflow-hidden bg-[var(--color-brand-dark)]">
+    <div id="home" ref={heroContainerRef} style={{ height: '500vh' }} className="relative">
+      <div className="sticky top-0 w-screen h-screen overflow-hidden bg-[var(--color-brand-dark)]">
 
-        {/* Particle Canvas Behind */}
+        {/* Layer 0: Particle Canvas Behind */}
         <canvas
           ref={particleCanvasRef}
-          className="absolute inset-0 w-full h-full z-0 opacity-80"
+          className="absolute inset-0 w-full h-full"
+          style={{ zIndex: 0 }}
         />
 
-        {/* Main Frames Canvas */}
+        {/* Layer 1: Frame Sequence Canvas — FULL SCREEN */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full z-10 will-change-transform mix-blend-screen opacity-90"
+          className="absolute inset-0 w-full h-full"
+          style={{
+            zIndex: 1,
+            filter: 'brightness(0.8) contrast(1.05)',
+          }}
+        />
+
+        {/* Layer 2: Vignette — Top & Bottom fade only, NO side darkening */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            zIndex: 2,
+            background: `
+              linear-gradient(to bottom, 
+                rgba(3,3,8,0.5) 0%, 
+                rgba(3,3,8,0.0) 20%, 
+                rgba(3,3,8,0.0) 70%, 
+                rgba(3,3,8,0.8) 100%
+              )
+            `,
+          }}
         />
 
         {/* Loading Bar */}
@@ -244,84 +338,148 @@ export default function HeroCanvas() {
           </div>
         )}
 
-        {/* Overlay Content */}
+        {/* Layer 3: Text Overlay — NO glass box, just centered text with shadows */}
         {isLoaded && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none px-4">
+          <>
+            {(() => {
+              // ✅ Find active chapter based on scroll progress
+              const activeChapter = HERO_CHAPTERS.find(
+                (ch) => scrollProgress >= ch.range[0] && scrollProgress < ch.range[1]
+              ) ?? HERO_CHAPTERS[0];
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="flex items-center space-x-2 border border-[var(--color-brand-cyan)] bg-[rgba(0,245,255,0.05)] px-4 py-1.5 rounded-full backdrop-blur-sm mb-8 border-glow-cyan"
-            >
-              <div className="w-2 h-2 rounded-full bg-[var(--color-brand-cyan)] animate-pulse shadow-[0_0_8px_rgba(0,245,255,1)]"></div>
-              <span className="text-xs md:text-sm font-semibold tracking-widest text-[var(--color-brand-cyan)]">
-                INDIA'S FIRST FREE ROAM VR ARCADE
-              </span>
-            </motion.div>
+              const chapterIndex = HERO_CHAPTERS.indexOf(activeChapter);
 
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.8, duration: 1 }}
-              className="font-heading text-7xl md:text-9xl font-black text-center leading-none"
-            >
-              <div className="text-white text-glow-cyan tracking-wider">IN5NITE</div>
-              <div className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-brand-cyan)] via-[var(--color-brand-purple)] to-[var(--color-brand-magenta)] mt-2">
-                VR
-              </div>
-            </motion.h1>
+              return (
+                <>
+                  {/* Main Text Content */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center z-[3] pointer-events-none">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={chapterIndex}
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -30 }}
+                        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className="flex flex-col items-center text-center w-full px-6 max-w-3xl mx-auto"
+                        style={{ alignItems: 'center', textAlign: 'center', width: '100%' }}
+                      >
+                        {/* Badge */}
+                        <div className="inline-flex items-center gap-2 border border-[var(--color-brand-cyan)]/30 
+                            bg-[rgba(0,245,255,0.05)] rounded-full px-4 py-1.5 text-[var(--color-brand-cyan)] text-xs 
+                            tracking-widest uppercase mb-8 backdrop-blur-sm">
+                          <span className="w-1.5 h-1.5 bg-[var(--color-brand-cyan)] rounded-full animate-pulse" />
+                          {activeChapter.badge}
+                        </div>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2, duration: 0.8 }}
-              className="mt-6 text-xl md:text-3xl font-heading text-[rgba(255,255,255,0.7)] tracking-[0.3em] uppercase text-center"
-            >
-              Play Until You Fall!!
-            </motion.div>
+                        {/* Headline */}
+                        <h1 className="font-heading leading-none mb-4">
+                          <span className="block text-white text-[clamp(3rem,8vw,7rem)] tracking-tight font-black"
+                            style={{
+                              textShadow: '0 0 60px rgba(0,0,0,1), 0 0 120px rgba(0,0,0,0.9), 2px 2px 0px rgba(0,0,0,0.8)'
+                            }}>
+                            {activeChapter.headline1}
+                          </span>
+                          <span className="block text-[clamp(3rem,8vw,7rem)] tracking-tight font-black"
+                            style={{
+                              background: 'linear-gradient(90deg, #22d3ee, #a855f7, #ec4899)',
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              backgroundClip: 'text',
+                              filter: 'drop-shadow(0 0 20px rgba(168,85,247,0.8))',
+                            }}>
+                            {activeChapter.headline2}
+                          </span>
+                        </h1>
 
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.5, duration: 0.8 }}
-              className="max-w-2xl text-center mt-6 text-sm md:text-base text-[rgba(255,255,255,0.6)] leading-relaxed font-light tracking-wide"
-            >
-              India's first Free Roam VR Multiplayer experience with Full Body Tracking.
-              <br className="hidden md:block" /> Step into another reality — right here in Surat.
-            </motion.p>
+                        {/* Tagline */}
+                        <p className="text-sm md:text-base tracking-[0.2em] uppercase mb-4 font-light"
+                          style={{
+                            color: 'rgba(103, 232, 249, 0.8)',
+                            textShadow: '0 2px 20px rgba(0,0,0,1), 0 0 40px rgba(0,0,0,0.9)'
+                          }}>
+                          {activeChapter.tagline}
+                        </p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.8, duration: 0.8 }}
-              className="mt-10 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 pointer-events-auto"
-            >
-              <button className="font-heading bg-gradient-to-r from-[var(--color-brand-cyan)] to-[var(--color-brand-purple)] text-white px-8 py-4 uppercase tracking-widest font-bold shadow-[0_0_15px_rgba(139,0,255,0.4)] hover:shadow-[0_0_25px_rgba(139,0,255,0.8)] transition-all duration-300 transform hover:-translate-y-1 rounded-sm">
-                Enter The Game
-              </button>
-              <button className="font-heading border border-white/40 text-white/90 px-8 py-4 uppercase tracking-widest hover:border-[var(--color-brand-cyan)] hover:text-[var(--color-brand-cyan)] hover:shadow-[0_0_15px_rgba(0,245,255,0.3)] transition-all duration-300 transform hover:-translate-y-1 rounded-sm">
-                Explore Experience
-              </button>
-            </motion.div>
+                        {/* Body */}
+                        <p className="text-sm md:text-base max-w-lg leading-relaxed font-light mb-8"
+                          style={{
+                            color: 'rgba(255,255,255,0.70)',
+                            textShadow: '0 2px 20px rgba(0,0,0,1), 0 0 40px rgba(0,0,0,0.9)'
+                          }}>
+                          {activeChapter.body}
+                        </p>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 2.5, duration: 1 }}
-              className="absolute bottom-10 flex flex-col items-center"
-            >
-              <span className="text-[10px] tracking-[0.4em] text-white/40 mb-3">SCROLL TO EXPLORE</span>
-              <motion.div
-                animate={{ y: [0, 8, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-                className="text-[var(--color-brand-cyan)] opacity-70"
-              >
-                <ChevronDown size={24} />
-              </motion.div>
-            </motion.div>
+                        {/* Buttons — only show on certain chapters */}
+                        {activeChapter.showButtons && (
+                          <div className="flex gap-4 flex-wrap justify-center pointer-events-auto">
+                            <button 
+                              onClick={() => window.dispatchEvent(new CustomEvent('open-booking'))}
+                              className="font-heading bg-gradient-to-r from-[var(--color-brand-cyan)] to-[var(--color-brand-purple)] text-white px-8 py-4 
+                                uppercase tracking-widest font-bold shadow-[0_0_15px_rgba(139,0,255,0.4)] 
+                                hover:shadow-[0_0_25px_rgba(139,0,255,0.8)] transition-all duration-300 
+                                transform hover:-translate-y-1 rounded-sm">
+                              Enter The Game
+                            </button>
+                            <button 
+                              onClick={() => document.getElementById('why-us')?.scrollIntoView({ behavior: 'smooth' })}
+                              className="font-heading border border-white/40 text-white/90 px-8 py-4 
+                                uppercase tracking-widest hover:border-[var(--color-brand-cyan)] hover:text-[var(--color-brand-cyan)] 
+                                hover:shadow-[0_0_15px_rgba(0,245,255,0.3)] transition-all duration-300 
+                                transform hover:-translate-y-1 rounded-sm">
+                              Explore Experience
+                            </button>
+                          </div>
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
 
-          </div>
+                  {/* Layer 4: Chapter Dot Indicators */}
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 z-[4] flex flex-col gap-3">
+                    {HERO_CHAPTERS.map((ch, i) => (
+                      <motion.div
+                        key={i}
+                        className={`rounded-full transition-all duration-500 ${
+                          i === chapterIndex
+                            ? 'bg-[var(--color-brand-cyan)] shadow-[0_0_12px_rgba(0,245,255,0.6)]'
+                            : 'bg-white/20'
+                        }`}
+                        animate={{
+                          height: i === chapterIndex ? 24 : 6,
+                          width: i === chapterIndex ? 2 : 6,
+                        }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Layer 5: Progress Bar */}
+                  <div className="absolute bottom-0 left-0 h-[2px] z-[5] transition-all duration-100"
+                    style={{
+                      width: `${scrollProgress * 100}%`,
+                      background: 'linear-gradient(90deg, #22d3ee, #a855f7)'
+                    }}
+                  />
+
+                  {/* Layer 6: Scroll Indicator — centered bottom */}
+                  {chapterIndex === 0 && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ delay: 0.5, duration: 1 }}
+                      className="absolute bottom-12 left-1/2 -translate-x-1/2 z-[6] flex flex-col items-center gap-2"
+                    >
+                      <span className="text-white/40 text-[10px] tracking-[0.3em] uppercase">
+                        Scroll to Explore
+                      </span>
+                      <div className="w-px h-10 bg-gradient-to-b from-cyan-400/60 to-transparent animate-pulse" />
+                    </motion.div>
+                  )}
+                </>
+              );
+            })()}
+          </>
         )}
       </div>
     </div>

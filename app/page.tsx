@@ -5,6 +5,7 @@ import Experiences from './components/Experiences';
 import Stats from './components/Stats';
 import Location from './components/Location';
 import Footer from './components/Footer';
+import BookingModal from './components/BookingModal';
 
 export default function Home() {
   return (
@@ -16,6 +17,7 @@ export default function Home() {
       <Stats />
       <Location />
       <Footer />
+      <BookingModal />
     </main>
   );
 }

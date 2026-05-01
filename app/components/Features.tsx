@@ -1,66 +1,285 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Headset, Activity, Users } from 'lucide-react';
+import { useState } from 'react';
 
-const features = [
+const FEATURES = [
   {
-    icon: <Headset className="w-10 h-10 text-[var(--color-brand-cyan)]" />,
-    title: "Free Roam VR",
-    description: "Move freely, no wires, full immersion. Experience virtual worlds without boundaries."
+    icon: '🥽',
+    title: 'Free Roam VR',
+    description: 'Move freely through virtual worlds with no wires, no limits, and complete immersion.',
+    color: '#22d3ee',
+    glow: 'rgba(34,211,238,0.12)',
+    border: 'rgba(34,211,238,0.2)',
   },
   {
-    icon: <Activity className="w-10 h-10 text-[var(--color-brand-purple)]" />,
-    title: "Full Body Tracking",
-    description: "India's first. Your entire body in the game for true unparalleled realism."
+    icon: '🦾',
+    title: 'Full Body Tracking',
+    description: 'Your body becomes the controller with advanced motion tracking for real in-game movement.',
+    color: '#a855f7',
+    glow: 'rgba(168,85,247,0.12)',
+    border: 'rgba(168,85,247,0.2)',
   },
   {
-    icon: <Users className="w-10 h-10 text-[var(--color-brand-magenta)]" />,
-    title: "Multiplayer",
-    description: "Play with friends in shared virtual worlds. Team up, fight, and survive together."
-  }
+    icon: '👥',
+    title: 'Multiplayer Arena',
+    description: 'Team up with friends, compete in missions, and experience shared VR worlds together.',
+    color: '#ec4899',
+    glow: 'rgba(236,72,153,0.12)',
+    border: 'rgba(236,72,153,0.2)',
+  },
+  {
+    icon: '🎮',
+    title: 'Premium VR Arcade',
+    description: 'Step into a cinematic gaming arena designed for friends, families, and thrill seekers.',
+    color: '#22d3ee',
+    glow: 'rgba(34,211,238,0.12)',
+    border: 'rgba(34,211,238,0.2)',
+  },
+  {
+    icon: '🌐',
+    title: 'Outdoor VR Events',
+    description: 'Bring immersive VR experiences to colleges, corporate events, malls, and brand activations.',
+    color: '#a855f7',
+    glow: 'rgba(168,85,247,0.12)',
+    border: 'rgba(168,85,247,0.2)',
+  },
+  {
+    icon: '⚡',
+    title: 'Custom VR Solutions',
+    description: 'Build tailored VR, AR, MR and metaverse experiences for business, training, education, and real estate.',
+    color: '#ec4899',
+    glow: 'rgba(236,72,153,0.12)',
+    border: 'rgba(236,72,153,0.2)',
+  },
 ];
 
-export default function Features() {
-  return (
-    <section id="experience" className="py-24 bg-[var(--color-brand-dark)] relative z-30">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
-        >
-          <h2 className="font-heading text-4xl md:text-5xl font-bold text-white mb-4">
-            WHY <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-brand-cyan)] to-[var(--color-brand-purple)]">IN5NITE VR?</span>
-          </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-[var(--color-brand-cyan)] to-[var(--color-brand-purple)] mx-auto rounded-full"></div>
-        </motion.div>
+// Helper: resolve RGB string from hex color for icon background
+function hexToRgb(hex: string): string {
+  if (hex === '#22d3ee') return '34,211,238';
+  if (hex === '#a855f7') return '168,85,247';
+  return '236,72,153';
+}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {features.map((feat, index) => (
+export default function Features() {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
+  return (
+    <section
+      id="why-us"
+      className="relative pt-20 pb-20 lg:pt-24 lg:pb-24 overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #030308 0%, #07070F 60%, #030308 100%)' }}
+    >
+      {/* ── Background Decorations ── */}
+
+      {/* 1. Faint dot grid */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #00F5FF 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }}
+      />
+
+      {/* 2. Cyan glow orb — top left */}
+      <div
+        className="absolute -top-40 -left-40 w-96 h-96 rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(0,245,255,0.06) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+        }}
+      />
+
+      {/* 3. Purple glow orb — bottom right */}
+      <div
+        className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(139,0,255,0.07) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+        }}
+      />
+
+      {/* 4. Neon accent line — top edge */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-px"
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(0,245,255,0.4), transparent)',
+        }}
+      />
+
+      {/* ── Section Header ── */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center mb-16 relative z-10">
+        {/* Label */}
+        <div className="inline-flex items-center gap-2 mb-4">
+          <div className="h-px w-8 bg-cyan-400/50" />
+          <span className="text-cyan-400 text-xs tracking-[0.3em] uppercase font-medium">
+            Why Choose Us
+          </span>
+          <div className="h-px w-8 bg-cyan-400/50" />
+        </div>
+
+        {/* Heading */}
+        <h2 className="font-orbitron font-black text-4xl md:text-5xl lg:text-6xl mb-2">
+          <span className="text-white">Why </span>
+          <span
+            style={{
+              background: 'linear-gradient(90deg, #22d3ee, #a855f7, #ec4899)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            IN5NITE VR?
+          </span>
+        </h2>
+
+        {/* Underline accent */}
+        <div
+          className="mx-auto mt-4 mb-6 w-24 h-px"
+          style={{
+            background: 'linear-gradient(90deg, transparent, #a855f7, transparent)',
+          }}
+        />
+
+        {/* Intro paragraph */}
+        <p className="text-white/50 text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-light">
+          Step beyond ordinary gaming with India's first free-roam VR multiplayer experience,
+          full body tracking, and immersive worlds built for players, groups, and events.
+        </p>
+      </div>
+
+      {/* ── Cards Grid ── */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {FEATURES.map((feature, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6, delay: index * 0.2 }}
-              className="bg-[#0a0a14]/60 backdrop-blur-sm border border-[rgba(255,255,255,0.05)] p-10 rounded-xl group hover:border-[var(--color-brand-cyan)] hover:shadow-[0_0_25px_rgba(0,245,255,0.15)] transition-all duration-500 transform hover:-translate-y-2"
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              onMouseEnter={() => setHoveredCard(index)}
+              onMouseLeave={() => setHoveredCard(null)}
+              style={{
+                background:
+                  hoveredCard === index
+                    ? `radial-gradient(ellipse at top left, ${feature.glow} 0%, rgba(7,7,15,0.95) 60%)`
+                    : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${hoveredCard === index ? feature.border : 'rgba(255,255,255,0.06)'}`,
+                borderRadius: '16px',
+                padding: '2rem',
+                position: 'relative',
+                overflow: 'hidden',
+                transform: hoveredCard === index ? 'translateY(-8px)' : 'translateY(0)',
+                boxShadow:
+                  hoveredCard === index
+                    ? `0 20px 60px ${feature.glow}, 0 0 0 1px ${feature.border}`
+                    : 'none',
+                transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                cursor: 'pointer',
+              }}
             >
-              <div className="mb-6 bg-[#13131f] w-20 h-20 rounded-full flex items-center justify-center border border-[rgba(255,255,255,0.05)] group-hover:scale-110 group-hover:border-[var(--color-brand-cyan)] transition-transform duration-500">
-                {feat.icon}
+              {/* Top glowing line */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '1px',
+                  background:
+                    hoveredCard === index
+                      ? `linear-gradient(90deg, transparent, ${feature.color}, transparent)`
+                      : 'transparent',
+                  transition: 'all 0.4s ease',
+                }}
+              />
+
+              {/* Icon container */}
+              <div
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '1.5rem',
+                  fontSize: '1.75rem',
+                  background: `rgba(${hexToRgb(feature.color)},0.1)`,
+                  border: `1px solid ${feature.border}`,
+                  boxShadow: hoveredCard === index ? `0 0 20px ${feature.glow}` : 'none',
+                  transition: 'all 0.4s ease',
+                }}
+              >
+                {feature.icon}
               </div>
-              <h3 className="font-heading text-2xl font-bold text-white mb-4 tracking-wide group-hover:text-[var(--color-brand-cyan)] transition-colors">
-                {feat.title}
+
+              {/* Title */}
+              <h3
+                style={{
+                  fontFamily: 'Orbitron, sans-serif',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  marginBottom: '0.75rem',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                {feature.title}
               </h3>
-              <p className="text-[rgba(255,255,255,0.6)] leading-relaxed font-light">
-                {feat.description}
+
+              {/* Description */}
+              <p
+                style={{
+                  fontSize: '0.875rem',
+                  color: 'rgba(255,255,255,0.5)',
+                  lineHeight: '1.7',
+                  fontWeight: 300,
+                }}
+              >
+                {feature.description}
               </p>
+
+              {/* Corner accent */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  width: '60px',
+                  height: '60px',
+                  background: `radial-gradient(circle at bottom right, ${feature.glow} 0%, transparent 70%)`,
+                  borderRadius: '0 0 16px 0',
+                }}
+              />
             </motion.div>
           ))}
         </div>
-        
+
+        {/* ── Bottom CTA ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="text-center mt-16"
+        >
+          <p className="text-white/40 text-sm tracking-widest uppercase mb-6">
+            Ready to experience the future?
+          </p>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-booking'))}
+            className="font-orbitron font-bold text-sm tracking-widest uppercase px-10 py-4 transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, #22d3ee, #a855f7)',
+              color: '#fff',
+              borderRadius: '2px',
+              boxShadow: '0 0 30px rgba(168,85,247,0.3)',
+            }}
+          >
+            Book Your Session →
+          </button>
+        </motion.div>
       </div>
     </section>
   );

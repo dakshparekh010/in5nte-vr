@@ -1,33 +1,99 @@
 'use client';
 import { motion } from 'framer-motion';
 
-const stats = [
-  { value: "2021", label: "Founded" },
-  { value: "11-50", label: "Team" },
-  { value: "1st", label: "India's First Free Roam" },
-  { value: "Surat", label: "HQ" }
+const STATS = [
+  { value: '2021', label: 'Founded', color: '#22d3ee' },
+  { value: '11-50', label: 'Team Size', color: '#a855f7' },
+  { value: '1st', label: "India's First Free Roam", color: '#ec4899' },
+  { value: 'Surat', label: 'Headquarters', color: '#22d3ee' },
 ];
 
 export default function Stats() {
   return (
-    <section className="py-20 bg-[var(--color-brand-dark)] relative z-30 border-y border-[rgba(255,255,255,0.02)]">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-6 text-center divide-x divide-[rgba(255,255,255,0.05)]">
-          {stats.map((stat, index) => (
+    <section
+      id="stats"
+      className="relative py-16 overflow-hidden"
+      style={{
+        background: 'linear-gradient(180deg, #030308 0%, #0a0514 50%, #030308 100%)',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+      }}
+    >
+      {/* Purple center glow */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          width: '700px',
+          height: '200px',
+          background: 'radial-gradient(ellipse, rgba(168,85,247,0.07) 0%, transparent 70%)',
+          filter: 'blur(40px)',
+        }}
+      />
+
+      {/* Top neon line */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-px pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent, rgba(168,85,247,0.5), transparent)',
+        }}
+      />
+
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 relative z-10">
+        {/* Label */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center text-white/25 text-xs tracking-[0.3em] uppercase mb-12 font-medium"
+        >
+          By The Numbers
+        </motion.p>
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0">
+          {STATS.map((stat, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="flex flex-col items-center justify-center px-4"
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="flex flex-col items-center text-center relative"
             >
-              <div className="font-heading text-4xl md:text-5xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-br from-[var(--color-brand-cyan)] to-[var(--color-brand-purple)]">
+              {/* Vertical divider between items — desktop only */}
+              {index !== 0 && (
+                <div
+                  className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-12"
+                  style={{
+                    background:
+                      'linear-gradient(to bottom, transparent, rgba(255,255,255,0.08), transparent)',
+                  }}
+                />
+              )}
+
+              {/* Stat value */}
+              <span
+                className="font-orbitron font-black text-5xl md:text-6xl mb-3"
+                style={{
+                  background: `linear-gradient(135deg, ${stat.color}, #ffffff)`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  filter: `drop-shadow(0 0 20px ${stat.color}40)`,
+                }}
+              >
                 {stat.value}
-              </div>
-              <div className="text-[rgba(255,255,255,0.55)] text-sm md:text-base uppercase tracking-widest font-medium">
+              </span>
+
+              {/* Stat label */}
+              <span
+                className="text-xs tracking-[0.2em] uppercase font-medium"
+                style={{ color: 'rgba(255,255,255,0.30)' }}
+              >
                 {stat.label}
-              </div>
+              </span>
             </motion.div>
           ))}
         </div>
