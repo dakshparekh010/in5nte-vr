@@ -1,0 +1,80 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
+import { EXPERIENCE_OPTIONS } from '../../config/booking';
+import { validateBookingForm } from '../../lib/validations';
+import { buildWhatsAppUrl } from '../../lib/whatsapp';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import type { BookingFormData, BookingErrors } from '../../types/booking';
+
+export default function BookingModal() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState<BookingFormData>({
+    name: '', phone: '', email: '', players: '1',
+    date: '', time: '', experience: 'VR Gaming', message: '',
+  });
+  const [errors, setErrors] = useState<BookingErrors>({});
+
+  useBodyScrollLock(isOpen);
+
+  useEffect(() => {
+    const handleOpen = (e: Event) => {
+      const ce = e as CustomEvent;
+      if (ce.detail?.experience) {
+        setFormData((prev) => ({ ...prev, experience: ce.detail.experience }));
+      }
+      setIsOpen(true);
+    };
+    window.addEventListener('open-booking', handleOpen);
+    return () => window.removeEventListener('open-booking', handleOpen);
+  }, []);
+
+  const closeModal = () => setIsOpen(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors = validateBookingForm(formData);
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+    window.open(buildWhatsAppUrl(formData), '_blank');
+    closeModal();
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center md:p-6">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeModal} className="fixed inset-0 bg-[#030308]/80 backdrop-blur-sm" />
+          <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }} className="relative w-full h-full md:w-auto md:h-auto md:max-w-2xl bg-[#07070f] border-t md:border border-white/10 rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.15)] overflow-hidden flex flex-col">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 z-50" />
+            <button onClick={closeModal} className="absolute top-4 right-4 z-50 flex items-center justify-center w-[44px] h-[44px] bg-[#07070f]/80 backdrop-blur-sm rounded-full border border-white/10 text-white/50 hover:text-white transition-colors" aria-label="Close modal"><X size={24} /></button>
+            <div className="overflow-y-auto max-h-screen md:max-h-[90vh] px-4 pt-16 pb-6 md:px-10 md:py-10 w-full h-full">
+              <h2 className="font-orbitron font-bold text-2xl sm:text-3xl text-white mb-2">BOOK YOUR <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">SESSION</span></h2>
+              <p className="text-white/50 text-sm mb-8">Reserve your spot in the metaverse. We&apos;ll confirm your booking shortly.</p>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-1"><label className="text-xs font-medium text-white/70 uppercase tracking-wider">Full Name *</label><input type="text" name="name" value={formData.name} onChange={handleChange} className={`w-full bg-white/5 border ${errors.name ? 'border-red-500/50' : 'border-white/10'} rounded-md px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors`} placeholder="John Doe" />{errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}</div>
+                  <div className="space-y-1"><label className="text-xs font-medium text-white/70 uppercase tracking-wider">Phone Number *</label><input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={`w-full bg-white/5 border ${errors.phone ? 'border-red-500/50' : 'border-white/10'} rounded-md px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors`} placeholder="+91 XXXXX XXXXX" />{errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}</div>
+                  <div className="space-y-1"><label className="text-xs font-medium text-white/70 uppercase tracking-wider">Email (Optional)</label><input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors" placeholder="john@example.com" /></div>
+                  <div className="space-y-1"><label className="text-xs font-medium text-white/70 uppercase tracking-wider">Number of Players *</label><select name="players" value={formData.players} onChange={handleChange} className="w-full bg-[#0a0a14] border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors appearance-none">{[1,2,3,4,5,6,7,8,'9+'].map((n) => (<option key={n} value={n}>{n} {n === 1 ? 'Player' : 'Players'}</option>))}</select></div>
+                  <div className="space-y-1"><label className="text-xs font-medium text-white/70 uppercase tracking-wider">Preferred Date *</label><input type="date" name="date" value={formData.date} onChange={handleChange} className={`w-full bg-white/5 border ${errors.date ? 'border-red-500/50' : 'border-white/10'} rounded-md px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors [color-scheme:dark]`} />{errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}</div>
+                  <div className="space-y-1"><label className="text-xs font-medium text-white/70 uppercase tracking-wider">Preferred Time *</label><input type="time" name="time" value={formData.time} onChange={handleChange} className={`w-full bg-white/5 border ${errors.time ? 'border-red-500/50' : 'border-white/10'} rounded-md px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors [color-scheme:dark]`} />{errors.time && <p className="text-red-400 text-xs mt-1">{errors.time}</p>}</div>
+                </div>
+                <div className="space-y-1"><label className="text-xs font-medium text-white/70 uppercase tracking-wider">Experience Type *</label><select name="experience" value={formData.experience} onChange={handleChange} className="w-full bg-[#0a0a14] border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors appearance-none">{EXPERIENCE_OPTIONS.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}</select></div>
+                <div className="space-y-1"><label className="text-xs font-medium text-white/70 uppercase tracking-wider">Message (Optional)</label><textarea name="message" value={formData.message} onChange={handleChange} rows={3} className="w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors resize-none" placeholder="Any special requests?" /></div>
+                <div className="pt-4"><button type="submit" className="w-full font-orbitron font-bold text-sm tracking-widest uppercase px-8 py-4 transition-all duration-300 hover:-translate-y-1" style={{ background: 'linear-gradient(135deg, #22d3ee, #a855f7)', color: '#fff', borderRadius: '4px', boxShadow: '0 0 20px rgba(168,85,247,0.3)' }}>Confirm via WhatsApp</button></div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}

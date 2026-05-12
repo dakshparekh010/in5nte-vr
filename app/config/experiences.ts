@@ -1,0 +1,58 @@
+import type { ExperienceItem } from '../types/experience';
+
+export const EXPERIENCES: ExperienceItem[] = [
+  {
+    image: '/images/experiences/vr-gaming.jpg',
+    title: 'VR Gaming',
+    description: 'Action-packed shooters, survival missions, and adrenaline-filled virtual battles.',
+    color: '#22d3ee',
+    glow: 'rgba(34,211,238,0.12)',
+    border: 'rgba(34,211,238,0.25)',
+    gradient: 'linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 40%, #0d1b3e 100%)',
+  },
+  {
+    image: '/images/experiences/vr-city-tour.jpg',
+    title: 'VR City Tour',
+    description: 'Explore futuristic cities, virtual spaces, and immersive architectural worlds.',
+    color: '#a855f7',
+    glow: 'rgba(168,85,247,0.12)',
+    border: 'rgba(168,85,247,0.25)',
+    gradient: 'linear-gradient(135deg, #0a1a1a 0%, #0a2e2a 40%, #0d3e35 100%)',
+  },
+  {
+    image: '/images/experiences/vr-education.jpg',
+    title: 'VR Education',
+    description: 'Make learning interactive with historical eras, science concepts, and virtual classrooms.',
+    color: '#ec4899',
+    glow: 'rgba(236,72,153,0.12)',
+    border: 'rgba(236,72,153,0.25)',
+    gradient: 'linear-gradient(135deg, #1a1500 0%, #2e2500 40%, #1a3000 100%)',
+  },
+  {
+    image: '/images/experiences/outdoor-vr-events.jpg',
+    title: 'Outdoor VR Events',
+    description: 'Custom pop-up VR arenas for colleges, corporate events, malls, and brand activations.',
+    color: '#22d3ee',
+    glow: 'rgba(34,211,238,0.12)',
+    border: 'rgba(34,211,238,0.25)',
+    gradient: 'linear-gradient(135deg, #1a0010 0%, #2e0020 40%, #1a0030 100%)',
+  },
+  {
+    image: '/images/experiences/free-roam-multiplayer.jpg',
+    title: 'Free Roam Multiplayer',
+    description: 'Move without wires and play team-based VR missions with your friends.',
+    color: '#a855f7',
+    glow: 'rgba(168,85,247,0.12)',
+    border: 'rgba(168,85,247,0.25)',
+    gradient: 'linear-gradient(135deg, #0d0a1a 0%, #1a0a3e 40%, #0a0d2e 100%)',
+  },
+  {
+    image: '/images/experiences/family-vr-fun.jpg',
+    title: 'Family VR Fun',
+    description: 'Safe, exciting, and memorable VR experiences for friends, families, and groups.',
+    color: '#ec4899',
+    glow: 'rgba(236,72,153,0.12)',
+    border: 'rgba(236,72,153,0.25)',
+    gradient: 'linear-gradient(135deg, #1a0a10 0%, #2e1020 40%, #1a0a1a 100%)',
+  },
+];

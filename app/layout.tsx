@@ -5,9 +5,10 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const orbitron = Orbitron({ subsets: ['latin'], variable: '--font-orbitron', weight: ['400', '500', '600', '700', '800', '900'] });
 
-export const metadata = {
-  title: "In5nite VR | India's First Free Roam VR Arcade",
-  description: "India's first Free Roam VR Multiplayer Gaming Arcade with Full Body Tracking in Surat, Gujarat.",
+export const metadata: Metadata = {
+  title: "In5nite VR | Free Roam VR Arcade & VR Device Rental — Surat, India",
+  description:
+    "Experience full-body free roam multiplayer VR at In5nite VR, India's first Free Roam VR Arcade in Surat. Book immersive VR games, rent VR devices for events, or enquire for VR device setup and sales.",
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -24,14 +25,31 @@ export const metadata = {
     'multiplayer VR arcade',
     'full body tracking VR',
     'In5nite VR',
+    'VR devices for rent',
+    'VR devices for sale',
+    'VR events India',
+    'corporate VR activation',
+    'VR gaming zone setup',
+    'rent VR headset Surat',
   ],
   openGraph: {
-    title: "In5nite VR | India's First Free Roam VR Arcade",
-    description: "Step into another reality at In5nite VR, Surat's premium VR gaming arcade.",
+    title: "In5nite VR | Free Roam VR Arcade & VR Device Rental",
+    description:
+      "Step into another reality at In5nite VR. Book immersive free roam multiplayer VR games, rent VR devices for events, or buy VR setups for your business — all from Surat, India.",
     url: 'https://in5nite-vr.netlify.app',
     siteName: 'In5nite VR',
     locale: 'en_IN',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "In5nite VR | Free Roam VR Arcade & VR Device Rental",
+    description:
+      "India's first Free Roam VR Multiplayer Arcade with Full Body Tracking. Book sessions, rent devices, or enquire for VR setups.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

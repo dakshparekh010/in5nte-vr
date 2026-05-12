@@ -8,6 +8,7 @@
   
   --font-sans: var(--font-inter);
   --font-heading: var(--font-orbitron);
+  --font-orbitron: var(--font-orbitron);
 }
 
 body {
