@@ -1,5 +1,6 @@
 /** Total frames in the hero scroll animation sequence */
-export const TOTAL_FRAMES = 259;
+export const TOTAL_FRAMES = 155;
+
 
 /** Path prefix for frame images. Full path: `${FRAME_PATH}NNN.${FRAME_EXTENSION}` */
 export const FRAME_PATH = '/frames/ezgif-frame-';
