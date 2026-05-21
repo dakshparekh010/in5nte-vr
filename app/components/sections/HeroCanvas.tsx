@@ -23,6 +23,8 @@ export default function HeroCanvas() {
   const isHeroVisibleRef = useRef<boolean>(true);
   const prefersReducedMotionRef = useRef<boolean>(false);
   const resizeRafRef = useRef<number>(0);
+  const lastChapterRef = useRef<number>(0);
+  const progressBarRef = useRef<HTMLDivElement>(null);
 
   // ── Check prefers-reduced-motion ──
   useEffect(() => {
@@ -168,62 +170,92 @@ export default function HeroCanvas() {
     };
   }, []);
 
-  // ── Draw a single frame (cover mode) ──
-  const drawFrame = useCallback(
-    (index: number) => {
+  // ── Helper: resolve a frame image, falling back to nearest loaded ──
+  const resolveFrame = useCallback((index: number): HTMLImageElement | null => {
+    const img = framesRef.current[index];
+    if (img && img.complete && img.naturalWidth > 0) return img;
+    // Find nearest loaded frame
+    let nearest = -1;
+    let minDist = TOTAL_FRAMES;
+    loadedSetRef.current.forEach((loadedIdx) => {
+      const dist = Math.abs(loadedIdx - index);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = loadedIdx;
+      }
+    });
+    if (nearest >= 0) {
+      const fallback = framesRef.current[nearest];
+      if (fallback && fallback.complete && fallback.naturalWidth > 0) return fallback;
+    }
+    return null;
+  }, []);
+
+  // ── Helper: calculate draw params for an image ──
+  const calcDrawParams = useCallback((img: HTMLImageElement, vw: number, vh: number, isMobile: boolean) => {
+    const fitMode = isMobile ? "cover" : HERO_FRAME_FIT_MODE;
+    const scale = fitMode === "contain"
+      ? Math.min(vw / img.naturalWidth, vh / img.naturalHeight)
+      : Math.max(vw / img.naturalWidth, vh / img.naturalHeight);
+    const drawWidth = img.naturalWidth * scale;
+    const drawHeight = img.naturalHeight * scale;
+    let x = (vw - drawWidth) / 2;
+    let y = (vh - drawHeight) / 2;
+    if (isMobile && fitMode === "cover") {
+      x = (vw - drawWidth) * HERO_MOBILE_FOCAL_X;
+      y = (vh - drawHeight) * HERO_MOBILE_FOCAL_Y;
+    }
+    return { x, y, drawWidth, drawHeight };
+  }, []);
+
+  // ── Draw frame with crossfade interpolation for smoother scrolling ──
+  const drawFrameInterpolated = useCallback(
+    (exactFrame: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // Skip if same frame already drawn
-      if (lastDrawnFrameRef.current === index) return;
+      const floorIdx = Math.floor(exactFrame);
+      const ceilIdx = Math.min(floorIdx + 1, TOTAL_FRAMES - 1);
+      const blend = exactFrame - floorIdx; // 0.0 → 1.0 fractional part
 
-      // Find the best available frame
-      let img = framesRef.current[index];
-      if (!img || !img.complete || img.naturalWidth === 0) {
-        // Find nearest loaded frame
-        let nearest = -1;
-        let minDist = TOTAL_FRAMES;
-        loadedSetRef.current.forEach((loadedIdx) => {
-          const dist = Math.abs(loadedIdx - index);
-          if (dist < minDist) {
-            minDist = dist;
-            nearest = loadedIdx;
-          }
-        });
-        if (nearest >= 0) {
-          img = framesRef.current[nearest];
+      const imgA = resolveFrame(floorIdx);
+      if (!imgA) return;
+
+      const vw = canvas.clientWidth;
+      const vh = canvas.clientHeight;
+      const isMobile = vw < 768;
+
+      ctx.clearRect(0, 0, vw, vh);
+
+      // Draw base frame
+      const pA = calcDrawParams(imgA, vw, vh, isMobile);
+      ctx.globalAlpha = 1;
+      ctx.drawImage(imgA, pA.x, pA.y, pA.drawWidth, pA.drawHeight);
+
+      // Crossfade to next frame if there's a significant blend factor
+      if (blend > 0.05 && ceilIdx !== floorIdx) {
+        const imgB = resolveFrame(ceilIdx);
+        if (imgB && imgB !== imgA) {
+          const pB = calcDrawParams(imgB, vw, vh, isMobile);
+          ctx.globalAlpha = blend;
+          ctx.drawImage(imgB, pB.x, pB.y, pB.drawWidth, pB.drawHeight);
+          ctx.globalAlpha = 1;
         }
-        if (!img || !img.complete || img.naturalWidth === 0) return;
       }
 
-      const viewportWidth = canvas.clientWidth;
-      const viewportHeight = canvas.clientHeight;
-      const isMobile = viewportWidth < 768;
-      const fitMode = isMobile ? "cover" : HERO_FRAME_FIT_MODE;
-
-      const scale = fitMode === "contain"
-        ? Math.min(viewportWidth / img.naturalWidth, viewportHeight / img.naturalHeight)
-        : Math.max(viewportWidth / img.naturalWidth, viewportHeight / img.naturalHeight);
-
-      const drawWidth = img.naturalWidth * scale;
-      const drawHeight = img.naturalHeight * scale;
-      
-      let x = (viewportWidth - drawWidth) / 2;
-      let y = (viewportHeight - drawHeight) / 2;
-
-      if (isMobile && fitMode === "cover") {
-        x = (viewportWidth - drawWidth) * HERO_MOBILE_FOCAL_X;
-        y = (viewportHeight - drawHeight) * HERO_MOBILE_FOCAL_Y;
-      }
-
-      ctx.clearRect(0, 0, viewportWidth, viewportHeight);
-      ctx.drawImage(img, x, y, drawWidth, drawHeight);
-
-      lastDrawnFrameRef.current = index;
+      lastDrawnFrameRef.current = floorIdx;
     },
-    []
+    [resolveFrame, calcDrawParams]
+  );
+
+  // ── Legacy drawFrame for loading/resize (integer index) ──
+  const drawFrame = useCallback(
+    (index: number) => {
+      drawFrameInterpolated(index);
+    },
+    [drawFrameInterpolated]
   );
 
   // ── Frame Sequence: Loading + Scroll Handling ──
@@ -287,10 +319,26 @@ export default function HeroCanvas() {
       // Schedule draw on next animation frame (coalesces multiple scroll events)
       cancelAnimationFrame(rafScrollIdRef.current);
       rafScrollIdRef.current = requestAnimationFrame(() => {
-        const frameIndex = Math.floor(fraction * (TOTAL_FRAMES - 1));
+        // Use fractional frame index for interpolated crossfade
+        const exactFrame = fraction * (TOTAL_FRAMES - 1);
+        const frameIndex = Math.floor(exactFrame);
         currentFrameRef.current = frameIndex;
-        drawFrame(frameIndex);
-        setScrollProgress(fraction);
+        drawFrameInterpolated(exactFrame);
+
+        // Update progress bar via DOM directly (no React re-render)
+        if (progressBarRef.current) {
+          progressBarRef.current.style.width = `${fraction * 100}%`;
+        }
+
+        // Only trigger React re-render when the active chapter changes
+        const newChapter = HERO_CHAPTERS.findIndex(
+          (ch) => fraction >= ch.range[0] && fraction < ch.range[1]
+        );
+        const resolvedChapter = newChapter >= 0 ? newChapter : (fraction >= 1 ? HERO_CHAPTERS.length - 1 : 0);
+        if (resolvedChapter !== lastChapterRef.current) {
+          lastChapterRef.current = resolvedChapter;
+          setScrollProgress(fraction);
+        }
       });
     };
 
@@ -367,7 +415,7 @@ export default function HeroCanvas() {
     <div
       id="home"
       ref={heroContainerRef}
-      style={{ height: '500vh' }}
+      style={{ height: '350vh' }}
       className="relative"
     >
       <div className="sticky top-0 w-screen h-screen overflow-hidden bg-[var(--color-brand-dark)]">
@@ -574,11 +622,12 @@ export default function HeroCanvas() {
                     ))}
                   </div>
 
-                  {/* Layer 5: Progress Bar */}
+                  {/* Layer 5: Progress Bar — driven by ref, not React state */}
                   <div
-                    className="absolute bottom-0 left-0 h-[2px] z-[5] transition-all duration-100"
+                    ref={progressBarRef}
+                    className="absolute bottom-0 left-0 h-[2px] z-[5]"
                     style={{
-                      width: `${scrollProgress * 100}%`,
+                      width: '0%',
                       background:
                         'linear-gradient(90deg, #22d3ee, #a855f7)',
                     }}
